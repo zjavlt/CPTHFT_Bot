@@ -136,8 +136,8 @@ void MarketDataConnector::on_read(beast::error_code ec, std::size_t byte_transfe
                       << "[Trade] " << (t.symbol == "BTCUSDT" ? "BTC" : t.symbol)
                       << " | P: " << t.price << "$"
                       << " | Q: " << t.quantity 
-                      << " | Latency(Binance): " << internal_latency << "ms"
-                      << " | Latency(Network): " << network_latency << "ms"
+                      << " | Latency(B): " << internal_latency << "ms"
+                      << " | Latency(N): " << network_latency << "ms"
                       <<" | Maker: " << (t.is_buyer_maker ? "Sell" : "Buy")
                       <<std::endl; 
         }
