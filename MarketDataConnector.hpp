@@ -1,5 +1,6 @@
 #pragma once
 
+#include "RingBuffer.hpp"
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
 #include <boost/beast/ssl.hpp>
@@ -24,9 +25,11 @@ using tcp = net::ip::tcp;
 class MarketDataConnector : public std::enable_shared_from_this<MarketDataConnector>{
 
     using WssStream = websocket::stream<beast::ssl_stream<tcp::socket>>;
+    std::shared_ptr<RingBuffer<Trade>> queue_;
 
 public:
-    MarketDataConnector(net::io_context& ioc, ssl::context& ctx);
+    MarketDataConnector(net::io_context& ioc, ssl::context& ctx, std::shared_ptr<RingBuffer<Trade>> q)
+        :   ws_(ioc, ctx), resolver_(ioc), queue_(q) {}
     ~MarketDataConnector() = default;
 
     void run(std::string host, std::string port);
