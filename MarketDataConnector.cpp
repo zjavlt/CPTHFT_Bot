@@ -128,6 +128,9 @@ void MarketDataConnector::on_read(beast::error_code ec, std::size_t byte_transfe
             std::string_view q_str = doc["q"].get_string();
             t.quantity = std::stod(std::string(q_str));
 
+            t.event_time = doc["E"].get_int64();
+            t.trade_time = doc["T"].get_int64();
+
 
             if (!queue_->enqueue(t)) {
                 std::cerr << "Queue Full" << std::endl;

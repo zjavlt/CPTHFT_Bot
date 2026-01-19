@@ -17,7 +17,10 @@ int main() {
         Trade t;
         while (true) {
             if (queue->dequeue(t)) {
-                std::cout << "[Consumer] " << t.symbol
+
+                int64_t latency = t.event_time - t.trade_time;
+                std::cout << std::fixed << std::setprecision(8)
+                          << "[Consumer] " << t.symbol
                           << " | P: " << t.price
                           << " | Q: " << t.quantity
                           << " | Latency: " << (t.event_time - t.trade_time) << "ms"
