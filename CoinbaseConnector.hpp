@@ -8,6 +8,10 @@ private:
     simdjson::padded_string json_data_;
 
 public:
+    CoinbaseConnector(net::io_context& ioc, ssl::context& ctx, std::shared_ptr<RingBuffer<Trade>> queue)
+        : MarketDataConnector(ioc, ctx, queue) {}
+
+protected:
     void on_session_started() override {
         std::string sub_msg = R"({
             "type": "subscribe",

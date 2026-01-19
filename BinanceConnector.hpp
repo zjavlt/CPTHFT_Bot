@@ -8,7 +8,8 @@ private:
     simdjson::padded_string json_data_;
 
 public:
-    using MarketDataConnector::MarketDataConnector;
+    BinanceConnector(net::io_context& ioc, ssl::context& ctx, std::shared_ptr<RingBuffer<Trade>> queue) 
+        : MarketDataConnector(ioc, ctx, queue) {}
 
 protected:
     void process_message(std::string_view data) override {
