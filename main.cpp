@@ -19,6 +19,7 @@ int main() {
             if (queue->dequeue(t)) {
                 std::cout << "[Consumer] " << t.symbol
                           << " | P: " << t.price
+                          << " | Q: " << t.quantity
                           << " | Latency: " << (t.event_time - t.trade_time) << "ms"
                           << std::endl;
             } else {

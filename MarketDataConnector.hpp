@@ -5,6 +5,7 @@
 #include <boost/beast.hpp>
 #include <boost/beast/ssl.hpp>
 #include <simdjson.h>
+#include <thread>
 
 namespace net = boost::asio;
 namespace ssl = net::ssl;

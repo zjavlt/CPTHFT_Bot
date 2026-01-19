@@ -2,6 +2,7 @@
 #include <iostream>
 #include <iomanip> // precision
 #include <chrono> //time
+#include <string>
 
 MarketDataConnector::MarketDataConnector(net::io_context& ioc, ssl::context& ctx, std::shared_ptr<RingBuffer<Trade>> queue) 
     : ws_(ioc, ctx)
@@ -119,8 +120,14 @@ void MarketDataConnector::on_read(beast::error_code ec, std::size_t byte_transfe
         if (event_type == "trade") {
             Trade t;
             t.symbol = doc["s"].get_string();
+            
+            // couold use simdjson double casting (fast)
+            std::string_view p_str = doc["p"].get_string();
+            t.price = std::stod(std::string(p_str));
 
-            t.price = std::stod(std::string(doc["p"].get_string()));
+            std::string_view q_str = doc["q"].get_string();
+            t.quantity = std::stod(std::string(q_str));
+
 
             if (!queue_->enqueue(t)) {
                 std::cerr << "Queue Full" << std::endl;
