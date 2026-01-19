@@ -1,4 +1,6 @@
 #include "MarketDataConnector.hpp"
+#include "CoinbaseConnector.hpp"
+#include "BinanceConnector.hpp"
 #include <iostream>
 
 int main() {
@@ -10,10 +12,13 @@ int main() {
 
     auto queue = std::make_shared<RingBuffer<Trade>>(4096);
 
-    auto bot = std::make_shared<MarketDataConnector>(ioc, ctx, queue);
-    bot->run("data-stream.binance.vision", "9443");
+    auto binance = std::make_shared<BinanceConnector>(ioc, ctx, queue);
+    binance->run("data-stream.binance.vision", "9443", "/ws/btcusdt@trade");
 
-    std::thread consumer_threaD([queue]() {
+    auto coinbase = std::make_shared<CoinbaseConnector>(ioc, ctx, queue);
+    coinbase->run("advanced-trade-ws.coinbase.com", "443", "/");
+
+    std::thread consumer_thread([queue]() {
         Trade t;
         while (true) {
             if (queue->dequeue(t)) {

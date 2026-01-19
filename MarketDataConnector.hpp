@@ -4,12 +4,15 @@
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
 #include <boost/beast/ssl.hpp>
-#include <simdjson.h>
-#include <thread>
+#include <memory>
+#include <string>
+#include <iostream>
+
 
 namespace net = boost::asio;
-namespace ssl = net::ssl;
 namespace beast = boost::beast;
+namespace http = beast::http;
+namespace ssl = net::ssl;
 namespace websocket = beast::websocket;
 
 struct Trade {
@@ -24,32 +27,84 @@ struct Trade {
 using tcp = net::ip::tcp;
 
 class MarketDataConnector : public std::enable_shared_from_this<MarketDataConnector>{
-
-    using WssStream = websocket::stream<beast::ssl_stream<tcp::socket>>;
+protected:
+    websocket::stream<beast::ssl_stream<tcp::socket>> ws_;
+    tcp::resolver resolver_;
+    beast::flat_buffer buffer_;
     std::shared_ptr<RingBuffer<Trade>> queue_;
+    std::string host_;
 
 public:
-    MarketDataConnector(net::io_context& ioc, ssl::context& ctx, std::shared_ptr<RingBuffer<Trade>> q);
-    ~MarketDataConnector() = default;
+    MarketDataConnector(net::io_context& ioc, ssl::context& ctx, std::shared_ptr<RingBuffer<Trade>> queue)
+        : ws_(net::make_strand(ioc)), resolver_(ioc), queue_(queue) {}
 
-    void run(std::string host, std::string port);
+    virtual ~MarketDataConnector() = default;
+
+    void run(const std::string& host, const std::string& port, const std::string& target) {
+        host_ = host;
+        resolver_.async_resolve(host, port,
+            beast::bind_front_handler(&MarketDataConnector::on_resolve, shared_from_this(), target));
+    }
+protected:
+    virtual void on_session_started() = 0;
+
+    virtual void process_message(std::string_view data) = 0;
 
 private:
-
-    tcp::resolver resolver_;
-    WssStream ws_;
-    beast::flat_buffer buffer_;
-    std::string host_;
-    simdjson::ondemand::parser parser_;
-    simdjson::padded_string json_data_;
     
-    void on_resolve(beast::error_code ec, tcp::resolver::results_type results);
+    void on_resolve(std::string target, beast::error_code ec, tcp::resolver::results_type results) {
+        if (ec) { std::cerr << "Resolve Failed: " << ec.message() << std::endl; return; }
 
-    void on_connect(beast::error_code ec, tcp::endpoint ep);
+        beast::get_lowest_layer(ws_).expires_after(std::chrono::seconds(30));
+        beast::get_lowest_layer(ws_).async_connect(results,
+            beast::bind_front_handler(&MarketDataConnector::on_connect, shared_from_this(), target));
+    }
 
-    void on_ssl_handshake(beast::error_code ec);
+    void on_connect(std::string target, beast::error_code ec, tcp::resolver::results_type::endpoint_type ep) {
+        if(ec) { std::cerr << "Connect Failed: " << ec.message() << std::endl; return; }
 
-    void on_handshake(beast::error_code ec);
+        beast::get_lowest_layer(ws_).expires_never();
+        ws_.set_option(websocket::stream_base::timeout::suggested(beast::role_type::client));
+        ws_.set_option(websocket::stream_base::decorator([](websocket::request_type& req) {
+            req.set(http::field::user_agent, "HFT_Bot_v1");
+        }));
 
-    void on_read(beast::error_code ec, std::size_t bytes_transferred);
+        ws_.next_layer().async_handshake(ssl::stream_base::client,
+            beast::bind_front_handler(&MarketDataConnector::on_ssl_handshake, shared_from_this(), target));
+    }
+
+    void on_ssl_handshake(std::string target, beast::error_code ec) {
+        if(ec) { std::cerr << "SSL Handshake Failed: " << ec.message() << std::endl; return; }
+
+        ws_.async_handshake(host_, target,
+            beast::bind_front_handler(&MarketDataConnector::on_handshake, shared_from_this()));
+    }
+
+    void on_handshake(beast::error_code ec) {
+        if(ec) { std::cerr << "Handshake Failed: " << ec.message() << std::endl; return; }
+
+        std::cout << "[Connected] " << host_ << std::endl;
+
+        // Trigger the hook for children to subscribe if needed
+        on_session_started();
+
+        // Start reading loop
+        do_read();
+    }
+
+    void do_read() {
+        ws_.async_read(buffer_,
+            beast::bind_front_handler(&MarketDataConnector::on_read, shared_from_this()));
+    }
+
+    void on_read(beast::error_code ec, std::size_t bytes_transferred) {
+        if(ec) { std::cerr << "Read Error: " << ec.message() << std::endl; return; }
+
+        // Convert buffer to string_view and pass to child class for parsing
+        auto data = beast::buffers_to_string(buffer_.data());
+        process_message(data);
+
+        buffer_.consume(buffer_.size());
+        do_read(); // Loop
+    }
 };
