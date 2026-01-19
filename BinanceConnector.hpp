@@ -11,10 +11,6 @@ public:
     using MarketDataConnector::MarketDataConnector;
 
 protected:
-    void on_session_started() override {
-        // no need
-    }
-
     void process_message(std::string_view data) override {
         json_data_ = simdjson::padded_string(data);
         try {

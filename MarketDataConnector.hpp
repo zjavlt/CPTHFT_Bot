@@ -1,19 +1,22 @@
 #pragma once
 
 #include "RingBuffer.hpp"
-#include <boost/asio.hpp>
-#include <boost/beast.hpp>
+#include <boost/beast/core.hpp>
 #include <boost/beast/ssl.hpp>
+#include <boost/beast/websocket.hpp>
+#include <boost/beast/websocket/ssl.hpp>
+#include <boost/asio/strand.hpp>
 #include <memory>
 #include <string>
 #include <iostream>
 
 
-namespace net = boost::asio;
 namespace beast = boost::beast;
 namespace http = beast::http;
-namespace ssl = net::ssl;
 namespace websocket = beast::websocket;
+namespace net = boost::asio;
+namespace ssl = boost::asio::ssl;
+using tcp = boost::asio::ip::tcp;
 
 struct Trade {
     std::string_view symbol;    // s
@@ -24,11 +27,10 @@ struct Trade {
     bool is_buyer_maker;        // m
 };
 
-using tcp = net::ip::tcp;
 
 class MarketDataConnector : public std::enable_shared_from_this<MarketDataConnector>{
 protected:
-    websocket::stream<beast::ssl_stream<tcp::socket>> ws_;
+    websocket::stream<beast::ssl_stream<beast::tcp_stream>> ws_;
     tcp::resolver resolver_;
     beast::flat_buffer buffer_;
     std::shared_ptr<RingBuffer<Trade>> queue_;
@@ -36,7 +38,7 @@ protected:
 
 public:
     MarketDataConnector(net::io_context& ioc, ssl::context& ctx, std::shared_ptr<RingBuffer<Trade>> queue)
-        : ws_(net::make_strand(ioc)), resolver_(ioc), queue_(queue) {}
+        : ws_(net::make_strand(ioc), ctx), resolver_(ioc), queue_(queue) {}
 
     virtual ~MarketDataConnector() = default;
 
@@ -46,7 +48,7 @@ public:
             beast::bind_front_handler(&MarketDataConnector::on_resolve, shared_from_this(), target));
     }
 protected:
-    virtual void on_session_started() = 0;
+    virtual void on_session_started() {}
 
     virtual void process_message(std::string_view data) = 0;
 
@@ -65,6 +67,7 @@ private:
 
         beast::get_lowest_layer(ws_).expires_never();
         ws_.set_option(websocket::stream_base::timeout::suggested(beast::role_type::client));
+        
         ws_.set_option(websocket::stream_base::decorator([](websocket::request_type& req) {
             req.set(http::field::user_agent, "HFT_Bot_v1");
         }));
