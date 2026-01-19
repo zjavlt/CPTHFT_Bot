@@ -3,9 +3,10 @@
 #include <iomanip> // precision
 #include <chrono> //time
 
-MarketDataConnector::MarketDataConnector(net::io_context& ioc, ssl::context& ctx) 
+MarketDataConnector::MarketDataConnector(net::io_context& ioc, ssl::context& ctx, std::shared_ptr<RingBuffer<Trade>> queue) 
     : ws_(ioc, ctx)
     , resolver_(ioc)
+    , queue_(queue)
 {
 }
 
@@ -119,31 +120,13 @@ void MarketDataConnector::on_read(beast::error_code ec, std::size_t byte_transfe
             Trade t;
             t.symbol = doc["s"].get_string();
 
-            std::string_view p_str = doc["p"].get_string();
-            std::string_view q_str = doc["q"].get_string();
+            t.price = std::stod(std::string(doc["p"].get_string()));
 
-            t.price = std::stod(std::string(p_str));
-            t.quantity = std::stod(std::string(q_str));
-            t.event_time = doc["E"].get_int64();
-            t.trade_time = doc["T"].get_int64();
-            t.is_buyer_maker = doc["m"].get_bool();
-
-            int64_t internal_latency = t.event_time - t.trade_time;
-
-            int64_t network_latency = now - t.event_time;
-
-            std::cout << std::fixed << std::setprecision(8)
-                      << "[Trade] " << (t.symbol == "BTCUSDT" ? "BTC" : t.symbol)
-                      << " | P: " << t.price << "$"
-                      << " | Q: " << t.quantity 
-                      << " | Latency(B): " << internal_latency << "ms"
-                      << " | Latency(N): " << network_latency << "ms"
-                      <<" | Maker: " << (t.is_buyer_maker ? "Sell" : "Buy")
-                      <<std::endl; 
+            if (!queue_->enqueue(t)) {
+                std::cerr << "Queue Full" << std::endl;
+            }
         }
-    } catch(simdjson::simdjson_error& e) {
-
-    }
+    } catch(simdjson::simdjson_error& e) {}
 
     buffer_.consume(buffer_.size());
 

@@ -2,21 +2,31 @@
 #include <iostream>
 
 int main() {
-    try {
-        net::io_context ioc;
+    net::io_context ioc;
 
-        ssl::context ctx(ssl::context::tlsv12_client);
+    ssl::context ctx(ssl::context::tlsv12_client);
 
-        ctx.set_verify_mode(ssl::verify_none);
+    ctx.set_verify_mode(ssl::verify_none);
 
-        auto bot = std::make_shared<MarketDataConnector>(ioc, ctx);
+    auto queue = std::make_shared<RingBuffer<Trade>>(4096);
 
-        bot->run("data-stream.binance.vision", "9443");
+    auto bot = std::make_shared<MarketDataConnector>(ioc, ctx, queue);
+    bot->run("data-stream.binance.vision", "9443");
 
-        ioc.run();
-    } catch (std::exception const& e) {
-        std::cerr<< "Error: " << e.what() << std::endl;
-    }
+    std::thread consumer_threaD([queue]() {
+        Trade t;
+        while (true) {
+            if (queue->dequeue(t)) {
+                std::cout << "[Consumer] " << t.symbol
+                          << " | P: " << t.price
+                          << " | Latency: " << (t.event_time - t.trade_time) << "ms"
+                          << std::endl;
+            } else {
+                std::this_thread::yield();
+            }
+        }
+    });
 
+    ioc.run();
     return 0;
 }
