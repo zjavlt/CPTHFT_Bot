@@ -29,8 +29,7 @@ class MarketDataConnector : public std::enable_shared_from_this<MarketDataConnec
     std::shared_ptr<RingBuffer<Trade>> queue_;
 
 public:
-    MarketDataConnector(net::io_context& ioc, ssl::context& ctx, std::shared_ptr<RingBuffer<Trade>> q)
-        :   ws_(ioc, ctx), resolver_(ioc), queue_(q) {}
+    MarketDataConnector(net::io_context& ioc, ssl::context& ctx, std::shared_ptr<RingBuffer<Trade>> q);
     ~MarketDataConnector() = default;
 
     void run(std::string host, std::string port);
