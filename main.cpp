@@ -13,16 +13,16 @@ int main() {
     auto queue = std::make_shared<RingBuffer<Trade>>(4096);
 
     auto binance = std::make_shared<BinanceConnector>(ioc, ctx, queue);
-    binance->run("data-stream.binance.vision", "9443", "/ws/btcusdt@trade");
+    binance->run("data-stream.binance.com", "9443", "/ws/btcusdt@trade");
 
     auto coinbase = std::make_shared<CoinbaseConnector>(ioc, ctx, queue);
-    coinbase->run("advanced-trade-ws.coinbase.com", "443", "/");
+    coinbase->run("ws-feed.exchange.coinbase.com", "443", "/");
 
     std::thread consumer_thread([queue]() {
         Trade t;
         while (true) {
             if (queue->dequeue(t)) {
-                std::string ex_name = (t.exchange == ExchangeId::BINANCE) ? "BIN" : "CB ";
+                std::string ex_name = (t.exchange == ExchangeId::BINANCE) ? "BIN" : "CB";
 
                 int64_t latency = std::chrono::duration_cast<std::chrono::milliseconds>(
                     std::chrono::system_clock::now().time_since_epoch()
