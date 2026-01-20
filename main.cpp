@@ -22,13 +22,17 @@ int main() {
         Trade t;
         while (true) {
             if (queue->dequeue(t)) {
+                std::string ex_name = (t.exchange == ExchangeId::BINANCE) ? "BIN" : "CB ";
 
-                int64_t latency = t.event_time - t.trade_time;
+                int64_t latency = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::system_clock::now().time_since_epoch()
+                ).count() - t.trade_time;
                 std::cout << std::fixed << std::setprecision(8)
-                          << "[Consumer] " << t.symbol
+                          << "[" << ex_name << "] "
+                          << t.symbol
                           << " | P: " << t.price
                           << " | Q: " << t.quantity
-                          << " | Latency: " << (t.event_time - t.trade_time) << "ms"
+                          << " | Lat: " << latency << "ms"
                           << std::endl;
             } else {
                 std::this_thread::yield();

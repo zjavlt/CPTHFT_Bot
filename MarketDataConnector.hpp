@@ -18,7 +18,13 @@ namespace net = boost::asio;
 namespace ssl = boost::asio::ssl;
 using tcp = boost::asio::ip::tcp;
 
+enum class ExchangeId : int {
+    BINANCE = 0,
+    COINBASE = 1
+};
+
 struct Trade {
+    ExchangeId exchange;
     char symbol[16];    // s
     double price;               // p (could be int64_t if needed for precision)
     double quantity;            // q

@@ -68,7 +68,7 @@ protected:
         std::string sub_msg = R"({
             "type": "subscribe",
             "product_ids": ["BTC_USD"],
-            "channel": "ticker"
+            "channel": "market_trades"
         })";
 
         ws_.async_write(net::buffer(sub_msg),
@@ -83,40 +83,36 @@ protected:
 
         try {
             auto doc = parser_.iterate(json_data_);
-            // coinbase format: { "channel": "ticker", "events": [ { "tickers": [ ... ] } ] }
-            // Note: This is a simplified parse logic for demonstration.
             std::string_view channel = doc["channel"];
-            if (channel == "ticker") {
+            std::cout << "at least coinbase connection is working?" << std::endl;
+            if (channel == "market_trades") {
                 auto events = doc["events"];
                 for (auto event : events) {
-                    auto tickers = event["ticers"];
-                    for (auto ticker : tickers) {
+                    auto trades = event["trades"];
+                    for (auto item : trades) {
+                        std::cout << "all works" << std::endl;
                         Trade t;
-                        std::string_view pid_sv = ticker["product_id"];
+                        t.exchange = ExchangeId::COINBASE;
+                        std::string_view pid_sv = item["product_id"];
                         size_t len = std::min(pid_sv.length(), sizeof(t.symbol) - 1);
                         std::memcpy(t.symbol, pid_sv.data(), len);
                         t.symbol[len] = '\0';
 
-                        std::string_view p_str = ticker["price"];
+                        std::string_view p_str = item["price"];
                         t.price = std::stod(std::string(p_str));
-                        t.quantity = 0.0;
+                        
+                        std::string_view q_str = item["size"];
+                        t.quantity = std::stod(std::string(q_str));
 
-                        auto time_val = ticker.find_field("time");
+                        auto time_val = item.find_field("time");
                         if (time_val.error() == simdjson::SUCCESS) {
                             // Extract string_view and pass to helper
                             std::string_view time_sv = time_val.get_string();
                             t.trade_time = parse_iso8601(time_sv);
-                        } else {
-                            // Fallback if "time" field is missing
-                            auto now = std::chrono::system_clock::now().time_since_epoch();
-                            t.trade_time = std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
-                        }
-
-                        t.event_time = t.trade_time;
-
-                        queue_->enqueue(t);
+                            t.event_time = t.trade_time;
+                            queue_->enqueue(t);
+                        } 
                     }
-                    
                 }
             }
         } catch (simdjson::simdjson_error& e) {

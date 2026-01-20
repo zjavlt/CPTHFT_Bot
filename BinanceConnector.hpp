@@ -20,6 +20,7 @@ protected:
 
             if (event_type == "trade") {
                 Trade t;
+                t.exchange = ExchangeId::BINANCE;
                 std::string_view s_sv = doc["s"].get_string();
 
                 size_t len = std::min(s_sv.length(), sizeof(t.symbol) - 1);
