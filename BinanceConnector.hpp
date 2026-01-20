@@ -20,7 +20,11 @@ protected:
 
             if (event_type == "trade") {
                 Trade t;
-                t.symbol = doc["s"].get_string();
+                std::string_view s_sv = doc["s"].get_string();
+
+                size_t len = std::min(s_sv.length(), sizeof(t.symbol) - 1);
+                std::memcpy(t.symbol, s_sv.data(), len);
+                t.symbol[len] = '\0'; //null terminate
                 
                 // could use simdjson double casting (fast)
                 std::string_view p_str = doc["p"].get_string();

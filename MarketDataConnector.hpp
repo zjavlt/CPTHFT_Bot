@@ -19,12 +19,11 @@ namespace ssl = boost::asio::ssl;
 using tcp = boost::asio::ip::tcp;
 
 struct Trade {
-    std::string_view symbol;    // s
+    char symbol[16];    // s
     double price;               // p (could be int64_t if needed for precision)
     double quantity;            // q
     int64_t trade_time;         // t
     int64_t event_time;         // e
-    bool is_buyer_maker;        // m
 };
 
 
@@ -66,11 +65,16 @@ private:
         if(ec) { std::cerr << "Connect Failed: " << ec.message() << std::endl; return; }
 
         beast::get_lowest_layer(ws_).expires_never();
+
         ws_.set_option(websocket::stream_base::timeout::suggested(beast::role_type::client));
-        
         ws_.set_option(websocket::stream_base::decorator([](websocket::request_type& req) {
             req.set(http::field::user_agent, "HFT_Bot_v1");
         }));
+
+        if (! SSL_set_tlsext_host_name(ws_.next_layer().native_handle(), host_.c_str())) {
+            std::cerr << "Failed to set SNI Hostname" << std::endl;
+            return;
+        }
 
         ws_.next_layer().async_handshake(ssl::stream_base::client,
             beast::bind_front_handler(&MarketDataConnector::on_ssl_handshake, shared_from_this(), target));
