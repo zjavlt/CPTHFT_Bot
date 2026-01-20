@@ -33,6 +33,8 @@ int main() {
                           << " | P: " << t.price
                           << " | Q: " << t.quantity
                           << " | Lat: " << latency << "ms"
+                          // WSL time delay not resolvable
+                          // TODO: integrate internal delay calculation for latency (if heavy compute -> drop)
                           << std::endl;
             } else {
                 std::this_thread::yield();
