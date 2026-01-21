@@ -52,23 +52,29 @@ simdjson (Fast Parsing)
 CMake 3.10+
 
 ## Build Instructions
-Bash
-# 1. Clone the repository
+
+1. Clone the repository
+```Bash 
 git clone https://github.com/yourusername/hft-arbitrage-sim.git
 cd hft-arbitrage-sim
-
-# 2. Create build directory
+```
+2. Create build directory
+```Bash 
 mkdir build && cd build
+```
 
-# 3. Compile
+3. Compile
+```Bash
 cmake ..
 make -j4
+```
 Run Instructions (Critical)
 To ensure the Strategy Thread gets CPU priority over OS background tasks, run with nice:
 
-Bash
+```Bash
 # Run with highest process priority (-20)
 sudo nice -n -20 ./HFT_Bot
+```
 🔮 Future Improvements
 While this simulator achieves microsecond-level performance, the following optimizations would be required for a production-grade live trading system:
 
