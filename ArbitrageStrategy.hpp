@@ -122,7 +122,7 @@ private:
         std::cout << "[BINANCE ] " 
                   << std::fixed << std::setprecision(2) << std::setw(10) << binance_price_
                   << " (USDT) | Jitter: " << std::setw(3) << bin_jit << "ms"
-                  << (last_updater == ExchangeId::BINANCE ? " <--" : "") 
+                  << (last_updater == ExchangeId::BINANCE ? "  <--" : "") 
                   << "\n";
         //line 2: Coinbase
         std::cout << "[COINBASE] " 

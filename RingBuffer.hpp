@@ -46,7 +46,7 @@ public:
     //enqueue
     bool enqueue(T data) {
         size_t cell_sequence;
-        size_t pos = tail_.load(std::memory_order_relaxed); //왜 memory_order_relaxed야 제일 약한 memory ordering이라는데
+        size_t pos = tail_.load(std::memory_order_relaxed);
 
         while (true) {
             // slot check
@@ -59,8 +59,6 @@ public:
             if (dif == 0) {
 
                 if (tail_.compare_exchange_weak(pos, pos + 1, std::memory_order_relaxed)) {
-                    //why weak exchange?
-
                     //slot successfully taken
                     cell.data = data;
 
