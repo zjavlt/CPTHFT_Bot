@@ -68,14 +68,14 @@ mkdir build && cd build
 cmake ..
 make -j4
 ```
-Run Instructions (Critical)
-To ensure the Strategy Thread gets CPU priority over OS background tasks, run with nice:
+4. Run
 
 ```Bash
 # Run with highest process priority (-20)
 sudo nice -n -20 ./HFT_Bot
 ```
-🔮 Future Improvements
+
+## Future Improvements
 While this simulator achieves microsecond-level performance, the following optimizations would be required for a production-grade live trading system:
 
 Kernel Bypass: Migrate from WSL2/Linux Kernel networking to Solarflare OpenOnload or DPDK to bypass the OS network stack and eliminate the 30ms jitter entirely.
