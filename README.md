@@ -1,4 +1,3 @@
-```
 # Ultra-Low Latency Bitcoin Arbitrage Simulator (C++20)
 
 ## Overview
@@ -80,4 +79,3 @@ Fixed-Point Arithmetic: Replace double precision with a Fixed-Point math library
 Hardware Acceleration: Offload the limit order book matching logic to an FPGA for sub-microsecond wire-to-wire latency.
 
 Async Logging: Implement a ring-buffer based logger to write trade logs to disk without blocking the hot path.
-```
