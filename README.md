@@ -6,9 +6,9 @@ System Architecture Showcase designed to simulate the engineering constraints of
 ## Key Features
 
 ### Low-Latency Engineering
-Lock-Free Concurrency: Implemented a custom SPSC (Single-Producer Single-Consumer) Ring Buffer to pass market data from Network threads to the Strategy thread without mutex lock.
+Lock-Free Concurrency: Implemented a custom MPMC Ring Buffer using ```std::atomic``` CAS loops and sequence barriers to pass market data between threads without mutex lock.
 
-Zero-Allocation Hot Path: The critical strategy loop avoids new/malloc completely to prevent heap fragmentation and GC pauses.
+Zero-Allocation Hot Path: avoids new/malloc completely to prevent heap fragmentation and GC pauses.
 
 SIMD Parsing: Used simdjson to parse high-volume JSON feeds using AVX2 instructions.
 
