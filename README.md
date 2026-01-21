@@ -1,4 +1,4 @@
-# Ultra-Low Latency Bitcoin Arbitrage Simulator (C++20)
+# Ultra-Low Latency Bitcoin Arbitrage Simulator (C++)
 
 ## Overview
 System Architecture Showcase designed to simulate the engineering constraints of High-Frequency Trading (HFT). A high-performance market microstructure simulator that models institutional crypto arbitrage with ultra-low latency tracking.
@@ -6,20 +6,20 @@ System Architecture Showcase designed to simulate the engineering constraints of
 ## Key Features
 
 ### Low-Latency Engineering
-Lock-Free Concurrency: Implemented a custom SPSC (Single-Producer Single-Consumer) Ring Buffer to pass market data from Network threads to the Strategy thread without mutex contention.
+Lock-Free Concurrency: Implemented a custom SPSC (Single-Producer Single-Consumer) Ring Buffer to pass market data from Network threads to the Strategy thread without mutex lock.
 
 Zero-Allocation Hot Path: The critical strategy loop avoids new/malloc completely to prevent heap fragmentation and GC pauses.
 
-SIMD-Accelerated Parsing: Utilizes simdjson to parse high-volume JSON feeds using AVX2 instructions, significantly faster than standard libraries.
+SIMD Parsing: Used simdjson to parse high-volume JSON feeds using AVX2 instructions.
 
-Optimized Time Parsing: Custom implementation to convert ISO8601 timestamps to UNIX epoch in microseconds, bypassing slow standard library calls like strptime.
+Optimized Time Parsing: Custom implementation to convert ISO8601 timestamps to UNIX epoch to avoid using slow standard library calls.
 
 ### Robust System Architecture
-Jitter Normalization Engine: Features a dynamic "floor tracking" algorithm that detects and neutralizes clock drift and network jitter inherent in non-real-time OS environments (WSL2).
+Jitter Spike Detection: Detects and neutralizes clock drift and network jitter inherent in non-real-time OS environments (WSL2).
 
-Decoupled Rendering: The UI runs on a strict 10 FPS cold path, ensuring that console I/O never blocks the unlimited speed hot path.
+Decoupled Rendering: The UI runs on 10 FPS (cold path), ensuring that console I/O never blocks the unlimited data fetch (hot path).
 
-Institutional Simulation: Dual-ledger profit calculation showing "True Profit" after fees (Retail 0.6% vs. VIP 0.017%), proving mathematical constraints of crypto arbitrage.
+Institutional Simulation: Calculting real profits after fees (Regular 0.6% vs. VIP 0.017%).
 
 ## Performance Metrics
 Strategy Compute Latency: ~300 - 450 nanoseconds
@@ -27,8 +27,6 @@ Strategy Compute Latency: ~300 - 450 nanoseconds
 Measured from packet dequeue to decision ready.
 
 Wire-to-Wire Latency: 0 - 30ms (Network dependent)
-
-Throughput: Capable of ingesting 10k+ ticks/second with zero backpressure.
 
 ## System Architecture
 The application runs on three dedicated threads to ensure separation of concerns:
@@ -43,11 +41,9 @@ Dashboard Thread (Cold Path): Reads state atomically and renders the ANSI-based 
 Dependencies
 C++20 Compliant Compiler (GCC 10+ / Clang 11+)
 
-Boost.Asio & Boost.Beast (Networking)
-
-OpenSSL (Secure WebSockets)
-
-simdjson (Fast Parsing)
+Boost.Asio & Boost.Beast
+OpenSSL
+simdjson
 
 CMake 3.10+
 
@@ -55,8 +51,8 @@ CMake 3.10+
 
 1. Clone the repository
 ```Bash 
-git clone https://github.com/yourusername/hft-arbitrage-sim.git
-cd hft-arbitrage-sim
+git clone https://github.com/zjavlt/CPTHFT_Bot.git
+cd hft-bot
 ```
 2. Create build directory
 ```Bash 
@@ -75,13 +71,8 @@ make -j4
 sudo nice -n -20 ./HFT_Bot
 ```
 
-## Future Improvements
-While this simulator achieves microsecond-level performance, the following optimizations would be required for a production-grade live trading system:
+## Room for Improvements
 
-Kernel Bypass: Migrate from WSL2/Linux Kernel networking to Solarflare OpenOnload or DPDK to bypass the OS network stack and eliminate the 30ms jitter entirely.
+- Replace double precision with a int calculations to eliminate floating-point error
 
-Fixed-Point Arithmetic: Replace double precision with a Fixed-Point math library to eliminate floating-point non-determinism.
-
-Hardware Acceleration: Offload the limit order book matching logic to an FPGA for sub-microsecond wire-to-wire latency.
-
-Async Logging: Implement a ring-buffer based logger to write trade logs to disk without blocking the hot path.
+- Implement a ring-buffer based logger to completely separate logger and the hot path
