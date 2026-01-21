@@ -20,7 +20,7 @@ int main() {
     coinbase->run("ws-feed.exchange.coinbase.com", "443", "/");
 
     std::thread consumer_thread([queue]() {
-        AbrtirageStrategy strategy;
+        ArbtirageStrategy strategy;
         while (true) {
             Trade t;
             if (queue->dequeue(t)) {
