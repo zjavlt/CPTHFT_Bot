@@ -23,9 +23,9 @@ private:
     FeeCalculator fee_calc_;
 
     std::chrono::steady_clock::time_point last_print_time_;
-    const int PRINT_INTERVAL_MS = 100; // update UI at 10 FPS (human eye limit? thats kinda cap)
+    const int PRINT_INTERVAL_MS = 100;
 
-    long long internal_lat_ns_ = 0; //nanoseconds
+    long long internal_lat_ns_ = 0;
     long long max_internal_lat_ns = 0; 
 
 public:
@@ -50,7 +50,7 @@ public:
 
         //filter late packets
         if (t.exchange == ExchangeId::BINANCE) {
-            if (t.trade_time < last_ts_bin_)return;//ignore stale data
+            if (t.trade_time < last_ts_bin_)return;
             last_ts_bin_ = t.trade_time;
             binance_price_ = t.price;
             if (raw_latency < bin_min_lat_) bin_min_lat_ = raw_latency;
@@ -96,7 +96,7 @@ public:
                     return;
                 }
             } else {
-                skipped_frame_count_ = 0; // We are healthy
+                skipped_frame_count_ = 0;
             }
 
             auto now = std::chrono::steady_clock::now();

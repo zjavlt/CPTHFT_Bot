@@ -10,6 +10,7 @@ find_package(simdjson CONFIG REQUIRED)
 add_executable(
     HFT_Bot 
     main.cpp)
+    
 
 target_link_libraries(HFT_Bot
     Boost::system

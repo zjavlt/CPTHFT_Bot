@@ -27,7 +27,6 @@ protected:
                 std::memcpy(t.symbol, s_sv.data(), len);
                 t.symbol[len] = '\0'; //null terminate
                 
-                // could use simdjson double casting (fast)
                 std::string_view p_str = doc["p"].get_string();
                 t.price = std::stod(std::string(p_str));
 

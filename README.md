@@ -49,22 +49,22 @@ CMake 3.10+
 
 ## Build Instructions
 
-1. Clone the repository
+### 1. Clone the repository
 ```Bash 
 git clone https://github.com/zjavlt/CPTHFT_Bot.git
 cd hft-bot
 ```
-2. Create build directory
+### 2. Create build directory
 ```Bash 
 mkdir build && cd build
 ```
 
-3. Compile
+### 3. Compile
 ```Bash
 cmake ..
 make -j4
 ```
-4. Run
+### 4. Run
 
 ```Bash
 # Run with highest process priority (-20)

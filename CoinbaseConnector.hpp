@@ -8,9 +8,6 @@
 #include <algorithm>
 #include <cstring>
 
-
-
-
 class CoinbaseConnector : public MarketDataConnector {
 private:
     simdjson::ondemand::parser parser_;
@@ -61,7 +58,6 @@ protected:
         try {
             auto doc = parser_.iterate(json_data_);
             simdjson::ondemand::object obj = doc.get_object();
-            // std::cout << "Parser check" << std::endl;
 
             auto type_res = obj.find_field("type");
 
@@ -69,7 +65,6 @@ protected:
                 std::string_view type = type_res.get_string();
                 
                 if (type == "ticker") {
-                    // std::cout << "Ticker check" << std::endl;
                     Trade t;
                     t.exchange = ExchangeId::COINBASE;
 
@@ -83,24 +78,20 @@ protected:
                     //price
                     std::string_view p_str = obj["price"];
                     t.price = std::stod(std::string(p_str));
-                    // std::cout << "price check" << std::endl;
                     //time
                     auto time_res = obj.find_field("time");
                     if (time_res.error() == simdjson::SUCCESS) {
                         std::string_view time_sv = time_res.get_string();
                         t.trade_time = parse_iso8601(time_sv);
                         t.event_time = t.trade_time;
-                        // std::cout << "time check" << std::endl;
                     } 
                     
                     //quant
                     auto size_res = obj.find_field("last_size");
                     if (size_res.error() == simdjson::SUCCESS) {
-                        // std::cout << "lastsize success check" << std::endl;
                         std::string_view s_str = size_res.get_string();
                         t.quantity = std::stod(std::string(s_str));
                     } else {
-                        // std::cout << "last size fail check" << std::endl;
                         t.quantity = 0.0;
                     }
                     queue_->enqueue(t);
@@ -110,7 +101,6 @@ protected:
             std::cerr << "[JSON ERROR] " << e.what() << "| Payload: " << data << std::endl;
         } catch (std::exception& e) {
             std::cerr << "[STD ERROR] " << e.what() << std::endl;
-            //coinbase sends welcome message -> that fails parser logic
         }
     }
 };

@@ -26,7 +26,7 @@ enum class ExchangeId : int {
 struct Trade {
     ExchangeId exchange;
     char symbol[16];    // s
-    double price;               // p (could be int64_t if needed for precision)
+    double price;               // p
     double quantity;            // q
     int64_t trade_time;         // t
     int64_t event_time;         // e

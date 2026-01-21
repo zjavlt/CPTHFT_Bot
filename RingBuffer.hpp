@@ -15,14 +15,11 @@ private:
     struct alignas(64) Element {
         T data;
 
-        //slot sequence
-        // initially index
-        // increase by buffer size
         std::atomic<size_t> sequence;
     };
 
     //member var
-    const size_t buffer_mask_; // size - 1 for bit computation
+    const size_t buffer_mask_;
     Element* buffer_;
 
     //alignas: allocate these vars in independant cache lines
@@ -63,8 +60,7 @@ public:
                     cell.data = data;
 
                     //update sequence number
-                    // using release ensures data is updated first. 
-                    // without it, CPU may swap these lines and other threads may read dummy data
+                    // using release ensures data is updated first
                     cell.sequence.store(pos + 1, std::memory_order_release);
                     return true;
                 }
@@ -92,8 +88,6 @@ public:
             intptr_t dif = (intptr_t)cell_sequence - (intptr_t)(pos + 1);
 
             if (dif == 0) {
-                //data is ready
-                // head +1 so that I can process it
                 if (head_.compare_exchange_weak(pos, pos + 1, std::memory_order_relaxed)) {
                     data = cell.data;
 

@@ -15,10 +15,7 @@ private:
     //VIP fees
     const double VIP_CB_TAKER = 0.0005;
     const double VIP_BIN_TAKER = 0.0001725;
-
-    //in prod this must be live
-    const double USDT_USD = 1.0000;
-
+    
 public:
     double calc_net_profit(double buy_price, double sell_price, bool buy_on_bin, Tier tier) {
         double fee_buy = 0.0;

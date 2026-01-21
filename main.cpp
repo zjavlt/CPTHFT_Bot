@@ -21,6 +21,7 @@ int main() {
 
     std::thread consumer_thread([queue]() {
         ArbtirageStrategy strategy;
+        
         while (true) {
             Trade t;
             if (queue->dequeue(t)) {
