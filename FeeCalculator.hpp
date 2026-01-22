@@ -15,7 +15,7 @@ private:
     //VIP fees
     const double VIP_CB_TAKER = 0.0005;
     const double VIP_BIN_TAKER = 0.0001725;
-    
+
 public:
     double calc_net_profit(double buy_price, double sell_price, bool buy_on_bin, Tier tier) {
         double fee_buy = 0.0;
@@ -33,10 +33,5 @@ public:
         double revenue = sell_price * (1.0 - fee_sell);
 
         return revenue - cost;
-    }
-
-    std::string get_fee_description(Tier tier) {
-        if (tier == Tier::REGULAR) return "REGULAR (CB 0.6% + BIN 0.1%)";
-        return "VIP 9  (CB 0.05% + BIN 0.017%)";
     }
 };
