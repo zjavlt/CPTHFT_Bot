@@ -73,6 +73,6 @@ sudo nice -n -20 ./HFT_Bot
 
 ## Room for Improvements
 
-- Replace double precision with a int calculations to eliminate floating-point error
+- Replace double precision with int calculations to eliminate floating-point error
 
 - Implement a ring-buffer based logger to completely separate logger and the hot path
